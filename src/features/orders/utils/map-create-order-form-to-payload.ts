@@ -10,9 +10,14 @@ function normalizeOptionalText(value?: string): string | undefined {
 export function mapCreateOrderFormToPayload(
   values: CreateOrderFormValues,
 ): CreateOrderPayload {
+  const paymentMode = values.paymentMode ?? 'STANDARD';
+
   return {
     pickupAddress: values.pickupAddress.trim(),
     scheduledDate: values.scheduledDate.format('YYYY-MM-DD'),
+    paymentMode,
+    expectedCollectionAmount:
+      paymentMode === 'COD' ? Number(values.expectedCollectionAmount) : undefined,
     recipient: {
       firstName: values.recipientFirstName.trim(),
       lastName: values.recipientLastName.trim(),

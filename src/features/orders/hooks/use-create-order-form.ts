@@ -23,6 +23,8 @@ const firstStepFields: Array<keyof CreateOrderFormValues> = [
   'recipientMunicipality',
   'recipientReferencePoint',
   'recipientInstructions',
+  'paymentMode',
+  'expectedCollectionAmount',
 ];
 
 export function useCreateOrderForm() {
@@ -63,6 +65,7 @@ export function useCreateOrderForm() {
 
       setCreatedOrder(order);
       setIsSuccessModalOpen(true);
+      window.dispatchEvent(new Event('orders:settlement-summary-updated'));
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'No se pudo crear la orden';

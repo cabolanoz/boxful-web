@@ -2,10 +2,8 @@
 
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { Button, Form } from 'antd';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useCreateOrderForm } from '@/features/orders/hooks/use-create-order-form';
-import { Routes } from '@/lib/utils/routes';
 import { OrderInformationStep } from './order-information-step';
 import {
   OrderPackagesStep,
@@ -14,7 +12,6 @@ import {
 import { OrderSuccessModal } from './order-success-modal';
 
 export function CreateOrderForm() {
-  const router = useRouter();
   const [orderPackages, setOrderPackages] = useState<OrderPackageInput[]>([]);
 
   const {

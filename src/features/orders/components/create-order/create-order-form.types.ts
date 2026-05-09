@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { PaymentMode } from '@/features/orders/types/order.types';
 
 export interface CreateOrderPackageFormValues {
   lengthCm: number;
@@ -22,6 +23,8 @@ export interface CreateOrderFormValues {
   recipientMunicipality: string;
   recipientReferencePoint?: string;
   recipientInstructions?: string;
+  paymentMode?: PaymentMode;
+  expectedCollectionAmount?: number;
 
   packages: CreateOrderPackageFormValues[];
 }

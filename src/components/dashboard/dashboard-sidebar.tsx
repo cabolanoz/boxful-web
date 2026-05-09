@@ -17,6 +17,7 @@ export function DashboardSidebar() {
           width={120}
           height={48}
           priority
+          className="h-auto"
         />
       </div>
 

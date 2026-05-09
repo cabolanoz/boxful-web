@@ -9,10 +9,45 @@ import type { ColumnsType } from 'antd/es/table';
 import type { Dayjs } from 'dayjs';
 import { useCallback, useEffect, useState, type Key } from 'react';
 import { getOrders } from '@/features/orders/api/orders.api';
-import type { Order } from '@/features/orders/types/order.types';
+import type {
+  Order,
+  OrderStatus,
+  PaymentMode,
+} from '@/features/orders/types/order.types';
 import { downloadOrdersCsv } from '@/features/orders/utils/download-orders-csv';
+import { formatCurrency } from '@/features/orders/utils/format-currency';
 
 const { RangePicker } = DatePicker;
+
+const getPaymentModeTag = (paymentMode: PaymentMode) => {
+  if (paymentMode === 'COD') {
+    return <Tag color="red" className="m-0 whitespace-nowrap">PCE</Tag>;
+  }
+
+  return <Tag color="blue" className="m-0 whitespace-nowrap">Estándar</Tag>;
+};
+
+const getOrderStatusTag = (status: OrderStatus) => {
+  const statusMap: Record<
+    OrderStatus,
+    { color: string; label: string }
+  > = {
+    PENDING: { color: 'gold', label: 'Pendiente' },
+    IN_TRANSIT: { color: 'blue', label: 'En tránsito' },
+    DELIVERED: { color: 'green', label: 'Entregada' },
+    CANCELLED: { color: 'red', label: 'Cancelada' },
+  };
+  const statusConfig = statusMap[status];
+
+  return (
+    <Tag color={statusConfig.color} className="m-0 whitespace-nowrap">
+      {statusConfig.label}
+    </Tag>
+  );
+};
+
+const getBoxfulRevenue = (order: Order) =>
+  (order.shippingCost ?? 0) + (order.codCommission ?? 0);
 
 export function OrdersHistoryView() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -68,39 +103,136 @@ export function OrdersHistoryView() {
 
   const columns: ColumnsType<Order> = [
     {
-      title: 'No. de orden',
+      title: <span className="whitespace-nowrap">No. de orden</span>,
       dataIndex: 'trackingCode',
       key: 'trackingCode',
-      render: (trackingCode: string) => trackingCode,
+      width: 150,
+      render: (trackingCode: string) => (
+        <span className="whitespace-nowrap">{trackingCode}</span>
+      ),
     },
     {
       title: 'Nombre',
       key: 'firstName',
-      render: (_, order) => order.recipient.firstName,
+      width: 120,
+      render: (_, order) => (
+        <span className="whitespace-nowrap">{order.recipient.firstName}</span>
+      ),
     },
     {
       title: 'Apellidos',
       key: 'lastName',
-      render: (_, order) => order.recipient.lastName,
+      width: 140,
+      render: (_, order) => (
+        <span className="whitespace-nowrap">{order.recipient.lastName}</span>
+      ),
     },
     {
       title: 'Departamento',
       key: 'department',
-      render: (_, order) => order.recipient.department,
+      width: 140,
+      render: (_, order) => (
+        <span className="whitespace-nowrap">
+          {order.recipient.department}
+        </span>
+      ),
     },
     {
       title: 'Municipio',
       key: 'municipality',
-      render: (_, order) => order.recipient.municipality,
+      width: 140,
+      render: (_, order) => (
+        <span className="whitespace-nowrap">
+          {order.recipient.municipality}
+        </span>
+      ),
     },
     {
-      title: 'Paquetes en orden',
+      title: <span className="whitespace-nowrap">Paquetes en orden</span>,
       key: 'packages',
       align: 'center',
+      width: 150,
       render: (_, order) => (
         <Tag color="green" className="m-0">
           {order.packages.length}
         </Tag>
+      ),
+    },
+    {
+      title: 'Modalidad',
+      dataIndex: 'paymentMode',
+      key: 'paymentMode',
+      width: 120,
+      render: (paymentMode: PaymentMode) => getPaymentModeTag(paymentMode),
+    },
+    {
+      title: 'Estado',
+      dataIndex: 'status',
+      key: 'status',
+      width: 130,
+      render: (status: OrderStatus) => getOrderStatusTag(status),
+    },
+    {
+      title: 'Recolectado',
+      key: 'collectedAmount',
+      align: 'right',
+      width: 120,
+      render: (_, order) => (
+        <span className="whitespace-nowrap">
+          {formatCurrency(order.collectedAmount)}
+        </span>
+      ),
+    },
+    {
+      title: <span className="whitespace-nowrap">Costo envío</span>,
+      dataIndex: 'shippingCost',
+      key: 'shippingCost',
+      align: 'right',
+      width: 120,
+      render: (shippingCost: number) => (
+        <span className="whitespace-nowrap">
+          {formatCurrency(shippingCost)}
+        </span>
+      ),
+    },
+    {
+      title: 'Comisión',
+      key: 'codCommission',
+      align: 'right',
+      width: 110,
+      render: (_, order) => (
+        <span className="whitespace-nowrap">
+          {formatCurrency(order.codCommission)}
+        </span>
+      ),
+    },
+    {
+      title: 'Ganancia',
+      key: 'revenue',
+      align: 'right',
+      width: 110,
+      render: (_, order) => (
+        <span className="whitespace-nowrap">
+          {formatCurrency(getBoxfulRevenue(order))}
+        </span>
+      ),
+    },
+    {
+      title: 'Liquidación',
+      dataIndex: 'settlementAmount',
+      key: 'settlementAmount',
+      align: 'right',
+      width: 120,
+      render: (settlementAmount: number) => (
+        <span
+          className={
+            settlementAmount >= 0
+              ? 'whitespace-nowrap text-emerald-700'
+              : 'whitespace-nowrap text-red-700'
+          }
+        >
+          {formatCurrency(settlementAmount)}
+        </span>
       ),
     },
   ];
@@ -165,6 +297,7 @@ export function OrdersHistoryView() {
               columns={columns}
               dataSource={orders}
               pagination={false}
+              scroll={{ x: 1540 }}
               rowSelection={{
                 selectedRowKeys,
                 onChange: setSelectedRowKeys,

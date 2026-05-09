@@ -43,9 +43,9 @@ export function PhoneConfirmationModal({
         </p>
 
         <div className="flex justify-end gap-2">
-          <Button onClick={onCancel}>Cancelar</Button>
+          <Button size="large" onClick={onCancel}>Cancelar</Button>
 
-          <Button type="primary" onClick={onConfirm} loading={isSubmitting}>
+          <Button type="primary" size="large" onClick={onConfirm} loading={isSubmitting}>
             Aceptar
           </Button>
         </div>

@@ -379,7 +379,7 @@ export function OrderPackagesStep({
           )}
         </div>
 
-        <div className="mt-10 flex items-center justify-between">
+        <div className="mt-10 flex flex-col lg:flex-row gap-4 items-center justify-between">
           <Button
             size="large"
             className="flex h-14 min-w-56 items-center justify-center gap-4 rounded-lg font-semibold"

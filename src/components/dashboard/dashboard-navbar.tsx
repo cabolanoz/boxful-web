@@ -4,12 +4,15 @@ import {
   DownOutlined,
   LogoutOutlined,
   MenuOutlined,
+  WalletOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 import type { PublicUser } from '@/features/auth/types/auth.types';
+import { useSettlementSummary } from '@/features/orders/hooks/use-settlement-summary';
+import { formatCurrency } from '@/features/orders/utils/format-currency';
 import { removeAccessToken } from '@/lib/auth/token-storage';
 import { Routes } from '@/lib/utils/routes';
 
@@ -29,6 +32,7 @@ export function DashboardNavbar({
 }: DashboardNavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { summary, isLoading } = useSettlementSummary();
 
   const handleLogout = () => {
     removeAccessToken();
@@ -63,18 +67,28 @@ export function DashboardNavbar({
         </h1>
       </div>
 
-      <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-lg px-2 py-2 text-slate-900 transition hover:bg-slate-100 sm:gap-3 sm:px-3"
-        >
-          <UserOutlined />
-          <span className="hidden max-w-48 truncate text-base sm:inline lg:text-lg">
-            {displayName || 'Usuario'}
-          </span>
-          <DownOutlined className="text-xs" />
-        </button>
-      </Dropdown>
+      <div className="flex items-center gap-3">
+        <div className="hidden items-center gap-2 rounded bg-teal-50 px-3 py-2 text-sm text-teal-900 md:flex">
+          <WalletOutlined className="text-base" />
+          <span>Monto a liquidar</span>
+          <strong>
+            {isLoading ? '...' : formatCurrency(summary.settlementAmount)}
+          </strong>
+        </div>
+
+        <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-lg px-2 py-2 text-slate-900 transition hover:bg-slate-100 sm:gap-3 sm:px-3"
+          >
+            <UserOutlined />
+            <span className="hidden max-w-48 truncate text-base sm:inline lg:text-lg">
+              {displayName || 'Usuario'}
+            </span>
+            <DownOutlined className="text-xs" />
+          </button>
+        </Dropdown>
+      </div>
     </header>
   );
 }
