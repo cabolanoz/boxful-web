@@ -1,3 +1,5 @@
+import { CreateOrderForm } from '@/features/orders/components/create-order/create-order-form';
+
 export default function OrdersPage() {
   return (
     <section>
@@ -8,19 +10,12 @@ export default function OrdersPage() {
 
         <p className="text-base text-slate-600">
           Dale una ventaja competitiva a tu negocio con entregas{' '}
-          <strong>el mismo día</strong> y <strong>el día siguiente</strong>.
+          <strong>el mismo día</strong> y <strong>el día siguiente</strong> a
+          nivel nacional.
         </p>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-8">
-        <h3 className="mb-8 text-lg font-bold text-slate-900">
-          Completa los datos
-        </h3>
-
-        <p className="text-slate-500">
-          Aquí construiremos el formulario de creación de orden.
-        </p>
-      </div>
+      <CreateOrderForm />
     </section>
   );
 }

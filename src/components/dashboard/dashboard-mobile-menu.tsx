@@ -51,8 +51,8 @@ export function DashboardMobileMenu({
               className={[
                 'flex items-center gap-4 rounded-lg px-5 py-4 text-base font-medium transition',
                 isActive
-                  ? 'bg-blue-700 text-white'
-                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900',
+                  ? '!bg-blue-700 !text-white'
+                  : '!text-slate-500 !hover:bg-slate-100 !hover:text-slate-900',
               ].join(' ')}
             >
               <Icon className="text-xl" />

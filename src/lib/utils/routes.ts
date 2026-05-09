@@ -3,6 +3,7 @@ export const Routes = {
     authRegister: () => '/auth/register',
     authLogin: () => '/auth/login',
     authMe: () => '/auth/me',
+    orders: () => '/orders',
   },
   web: {
     home: () => '/',

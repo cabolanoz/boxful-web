@@ -8,9 +8,11 @@ export const antdTheme: ThemeConfig = {
   },
   components: {
     Button: {
-      controlHeightLG: 40,
-      borderRadius: 8,
+      controlHeightLG: 48,
+      borderRadius: 12,
       fontWeight: 600,
+      paddingInlineLG: 24,
+      contentFontSizeLG: 16,
     },
     Input: {
       controlHeightLG: 40,
