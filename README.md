@@ -2,7 +2,7 @@
 
 Frontend application for the Boxful Full Stack Engineer technical test.
 
-This project is built with Next.js, React, TypeScript, Ant Design, and Tailwind CSS. It connects to the Boxful API for user registration, login, authenticated session validation, and protected dashboard routes.
+This project is built with Next.js, React, TypeScript, Ant Design, and Tailwind CSS. It connects to the Boxful API for user registration, login, authenticated session validation, order creation, searchable order history, and CSV export.
 
 ## Tech Stack
 
@@ -14,7 +14,6 @@ This project is built with Next.js, React, TypeScript, Ant Design, and Tailwind 
 - Ant Design
 - Tailwind CSS
 - ESLint
-- Prettier
 
 ## Requirements
 
@@ -50,6 +49,14 @@ The backend should expose at least the following endpoints:
 POST /api/auth/register
 POST /api/auth/login
 GET  /api/auth/me
+POST /api/orders
+GET  /api/orders
+```
+
+The order history screen sends optional date filters as query parameters:
+
+```txt
+GET /api/orders?dateFrom=2026-01-01&dateTo=2026-07-31
 ```
 
 Before testing registration, login, orders, or history, make sure the backend API is running.
@@ -110,9 +117,18 @@ Registration screen. It collects user information and asks the user to confirm t
 
 Protected order creation screen. A valid authenticated session is required.
 
+The flow is split into two steps:
+
+1. Pickup and recipient information.
+2. Package information.
+
+The submit action sends the order to the backend as an authenticated `POST /api/orders` request.
+
 ### `/history`
 
 Protected order history screen. A valid authenticated session is required.
+
+The history screen loads orders from `GET /api/orders`, supports filtering by scheduled date range, and can export selected rows to a CSV file.
 
 ## Authentication Flow
 
@@ -141,7 +157,7 @@ The dashboard navbar exposes a dropdown with a logout action.
 Logout currently works client-side by removing the stored token:
 
 ```txt
-localStorage.removeItem("boxful_access_token")
+localStorage.removeItem("__boxful_access_token")
 ```
 
 No backend logout endpoint is required for the current stateless JWT implementation.
@@ -157,6 +173,56 @@ The UI follows the provided Figma screens using:
 - Ant Design `ConfigProvider` for shared theme tokens.
 
 The project intentionally avoids inline `style` props where possible and prefers Tailwind utility classes.
+
+## Orders Flow
+
+Order creation is handled with a small feature module under:
+
+```txt
+src/features/orders
+```
+
+The main pieces are:
+
+- `create-order-form.tsx`: coordinates the two-step order form.
+- `order-information-step.tsx`: collects pickup and recipient data.
+- `order-packages-step.tsx`: collects package dimensions, weight, and content.
+- `use-create-order-form.ts`: owns validation, submit state, API call, and success modal state.
+- `map-create-order-form-to-payload.ts`: maps UI form values to the backend `CreateOrderPayload`.
+
+The package data sent to the API uses the backend field names directly:
+
+```ts
+{
+  lengthCm: number;
+  heightCm: number;
+  widthCm: number;
+  weightPounds: number;
+  content: string;
+}
+```
+
+This keeps the request payload explicit and avoids hidden transformations inside the API client.
+
+## Order History
+
+The history page displays the orders returned by the API in descending creation order. The backend owns the ordering.
+
+The date filter is intentionally simple:
+
+- The UI lets the user select a range of months.
+- The frontend sends `dateFrom` as the first day of the first selected month.
+- The frontend sends `dateTo` as the last day of the last selected month.
+
+CSV export is generated locally from the data already loaded in the table. Since this implementation does not include pagination and the visible dataset is already in memory, a separate export endpoint is not required for the current scope.
+
+Only selected rows are exported. The CSV helper lives in:
+
+```txt
+src/features/orders/utils/download-orders-csv.ts
+```
+
+If the product later needs large exports, background jobs, audit logging, or exports with fields not loaded in the UI, CSV generation should move to the backend.
 
 ## Ant Design Theme
 
@@ -244,6 +310,30 @@ src/
       types/
         auth.types.ts
 
+    orders/
+      api/
+        orders.api.ts
+
+      components/
+        create-order/
+          create-order-form.tsx
+          create-order-form.types.ts
+          order-information-step.tsx
+          order-packages-step.tsx
+          order-success-modal.tsx
+
+        orders-history-view.tsx
+
+      hooks/
+        use-create-order-form.ts
+
+      types/
+        order.types.ts
+
+      utils/
+        download-orders-csv.ts
+        map-create-order-form-to-payload.ts
+
   lib/
     api/
       http-client.ts
@@ -323,6 +413,33 @@ Encapsulates login form behavior, API call, success handling, error handling, to
 
 Encapsulates register form behavior, phone confirmation modal state, API call, token storage, and navigation.
 
+### `src/features/orders/api/orders.api.ts`
+
+Order API functions:
+
+```txt
+createOrder()
+getOrders()
+```
+
+`getOrders()` accepts optional date filters and serializes them as query parameters.
+
+### `src/features/orders/hooks/use-create-order-form.ts`
+
+Encapsulates order form behavior, first-step validation, order submission, success handling, and error handling.
+
+### `src/features/orders/components/create-order/order-packages-step.tsx`
+
+Collects package dimensions, weight, and content before submitting the order.
+
+### `src/features/orders/components/orders-history-view.tsx`
+
+Displays order history, date filtering, selected-row state, and CSV download action.
+
+### `src/features/orders/utils/download-orders-csv.ts`
+
+Generates and downloads a CSV file for the selected orders already loaded in the browser.
+
 ## Available Scripts
 
 ```bash
@@ -395,7 +512,12 @@ Before committing changes, verify the following:
 7. The dashboard navbar displays the authenticated user's name.
 8. The navbar dropdown allows the user to log out.
 9. Logging out removes the access token and redirects to `/login`.
-10. The app builds successfully.
+10. Creating an order requires at least one package.
+11. Creating an order shows the success modal with the tracking code.
+12. The history screen lists created orders in descending order from the API.
+13. Searching history with a month range sends `dateFrom` and `dateTo`.
+14. Selecting rows and clicking "Descargar órdenes" downloads a CSV with only the selected rows.
+15. The app builds successfully.
 
 ## Build Validation
 
@@ -411,3 +533,7 @@ npm run build
 The current authentication approach stores the JWT access token in `localStorage` to keep the technical test implementation simple and easy to review.
 
 For a production application, the authentication strategy should be revisited. A stronger approach would likely include HttpOnly cookies, refresh tokens, token rotation, server-side session validation, and CSRF protection depending on the final architecture.
+
+Package editing after a package has already been added is intentionally kept minimal in the current version. The user can remove and re-add a package. A direct edit action can be added as a small enhancement without changing the API contract.
+
+The optional COD and settlement module described in the technical test is not implemented in this phase. The current order types already include `paymentMode`, which leaves a clear path for adding COD-specific fields, webhook updates, shipping rates, and settlement calculations later.
